@@ -15,14 +15,14 @@ const YEAR_OPTIONS = [currentYear - 2, currentYear - 1, currentYear, currentYear
 }))
 
 const ReportFilters = ({ filters, onChange }) => (
-  <div className="flex flex-wrap items-end gap-4">
+  <div className="flex flex-wrap items-end gap-3 sm:gap-4">
     <div className="space-y-1.5">
-      <Label>Status</Label>
+      <Label className="text-xs font-medium text-muted-foreground">Status</Label>
       <Select
         value={filters.status || 'ALL'}
         onValueChange={(val) => onChange({ ...filters, status: val === 'ALL' ? '' : val })}
       >
-        <SelectTrigger className="w-36">
+        <SelectTrigger className="h-10 w-[10.5rem] rounded-lg sm:w-40">
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>
@@ -37,12 +37,12 @@ const ReportFilters = ({ filters, onChange }) => (
     </div>
 
     <div className="space-y-1.5">
-      <Label>Year</Label>
+      <Label className="text-xs font-medium text-muted-foreground">Year</Label>
       <Select
         value={filters.year || 'ALL'}
         onValueChange={(val) => onChange({ ...filters, year: val === 'ALL' ? '' : val })}
       >
-        <SelectTrigger className="w-28">
+        <SelectTrigger className="h-10 w-28 rounded-lg">
           <SelectValue placeholder="All years" />
         </SelectTrigger>
         <SelectContent>

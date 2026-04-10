@@ -14,14 +14,14 @@ const AnimatedOutlet = () => {
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location.pathname}
-        initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+        initial={reduceMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={reduceMotion ? undefined : { opacity: 0 }}
         transition={{
-          duration: reduceMotion ? 0 : 0.22,
+          duration: reduceMotion ? 0 : 0.18,
           ease: easeOut,
         }}
-        className="min-h-0"
+        className="min-h-0 w-full min-w-0"
       >
         {outlet}
       </motion.div>

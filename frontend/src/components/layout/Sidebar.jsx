@@ -33,7 +33,7 @@ const NavItem = ({ to, label, icon: Icon, collapsed, onNavigate, goKey, showShor
   >
     <Icon
       className={cn(
-        'h-[1.125rem] w-[1.125rem] shrink-0 transition-transform group-hover:scale-105',
+        'h-[1.125rem] w-[1.125rem] shrink-0 text-current',
         collapsed && 'mx-auto'
       )}
     />

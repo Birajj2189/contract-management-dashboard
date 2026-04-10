@@ -46,7 +46,7 @@ const Header = ({ className }) => {
       )}
     >
       <div
-        className="flex min-h-[3.25rem] w-full max-w-full items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:min-h-14 lg:px-6"
+        className="mx-auto flex min-h-[3.25rem] w-full min-w-0 max-w-7xl items-center gap-2 px-4 sm:gap-3 sm:px-5 lg:min-h-14 lg:px-8"
       >
         <Button
           type="button"

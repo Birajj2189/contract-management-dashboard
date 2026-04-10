@@ -35,7 +35,7 @@ const RecentSkeleton = () => (
 const DashboardSkeleton = () => (
   <div className="space-y-6" role="status" aria-label="Loading dashboard">
     <StatsGridSkeleton />
-    <div className="grid gap-4 lg:grid-cols-5">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-5">
       <div className="lg:col-span-2">
         <ChartSkeleton />
       </div>

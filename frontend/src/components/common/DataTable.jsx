@@ -22,6 +22,7 @@ import { cn } from '@/utils/cn'
  * @param {boolean} isLoading
  * @param {string} emptyTitle
  * @param {node} emptyAction
+ * @param {'default' | 'plain'} variant — plain: no outer card (nest inside parent Card)
  */
 const DataTable = memo(
   ({
@@ -34,6 +35,7 @@ const DataTable = memo(
     emptyAction,
     className,
     skeletonRowCount = 8,
+    variant = 'default',
   }) => {
     const { page, totalPages, onPageChange, total, pageSize: pageSizeProp } = pagination || {}
     const pageSize = pageSizeProp ?? 10
@@ -64,10 +66,17 @@ const DataTable = memo(
     const rangeEnd =
       typeof total === 'number' && total > 0 ? Math.min(page * pageSize, total) : 0
 
+    const isPlain = variant === 'plain'
+
     return (
       <div className={cn('space-y-4', className)}>
         <div
-          className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm"
+          className={cn(
+            'min-w-0 overflow-x-auto',
+            isPlain
+              ? 'bg-transparent'
+              : 'overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm'
+          )}
           role={isLoading ? 'status' : undefined}
           aria-busy={isLoading || undefined}
           aria-label={isLoading ? 'Loading table data' : undefined}
@@ -135,7 +144,12 @@ const DataTable = memo(
 
         {showPager && (
           <div
-            className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/15 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4"
+            className={cn(
+              'flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4',
+              isPlain
+                ? 'border-t border-border/60 bg-muted/10'
+                : 'rounded-xl border border-border/60 bg-muted/15'
+            )}
             aria-label="Table pagination"
           >
             <p className="text-sm text-muted-foreground">

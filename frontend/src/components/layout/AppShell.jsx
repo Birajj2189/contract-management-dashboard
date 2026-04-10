@@ -44,10 +44,10 @@ const AppShell = () => {
 
       <KeyboardShortcutsDialog open={helpOpen} onOpenChange={setHelpOpen} />
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <Header />
-        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-5 sm:py-6 lg:px-8 lg:py-8">
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-5 sm:px-5 sm:py-6 lg:px-8 lg:py-8">
             <AnimatedOutlet />
           </div>
         </main>

@@ -6,7 +6,8 @@ import {
   useDeleteContract,
 } from '@/features/contracts/hooks/useContractQueries'
 import PageWrapper from '@/components/layout/PageWrapper'
-import { Button } from '@/components/ui/Button'
+import { Button, buttonVariants } from '@/components/ui/Button'
+import { cn } from '@/utils/cn'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import StatusBadge from '@/features/contracts/components/StatusBadge'
 import VersionSnapshotDialog from '@/features/contracts/components/VersionSnapshotDialog'
@@ -47,12 +48,13 @@ const ContractDetailPage = () => {
       description={`Contract · Created ${formatRelative(contract.createdAt)}`}
       actions={
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/contracts/${id}/edit`}>
-              <Pencil className="mr-1 h-4 w-4" />
-              Edit
-            </Link>
-          </Button>
+          <Link
+            to={`/contracts/${id}/edit`}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+          >
+            <Pencil className="mr-1 h-4 w-4" />
+            Edit
+          </Link>
           <Button
             variant="destructive"
             size="sm"

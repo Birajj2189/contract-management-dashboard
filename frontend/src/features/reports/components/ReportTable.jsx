@@ -2,12 +2,20 @@ import DataTable from '@/components/common/DataTable'
 import StatusBadge from '@/features/contracts/components/StatusBadge'
 import { formatDate } from '@/utils/formatDate'
 
-const ReportTable = ({ data, isLoading }) => {
+const ReportTable = ({
+  data,
+  isLoading,
+  variant = 'default',
+  pagination,
+  emptyDescription,
+}) => {
   const columns = [
     {
       key: 'title',
       header: 'Contract title',
-      render: (value) => <span className="font-medium">{value}</span>,
+      render: (value) => (
+        <span className="line-clamp-2 font-medium text-foreground">{value}</span>
+      ),
     },
     {
       key: 'status',
@@ -38,10 +46,13 @@ const ReportTable = ({ data, isLoading }) => {
 
   return (
     <DataTable
+      variant={variant}
       columns={columns}
       data={data}
       isLoading={isLoading}
+      pagination={pagination}
       emptyTitle="No data for selected filters"
+      emptyDescription={emptyDescription}
     />
   )
 }

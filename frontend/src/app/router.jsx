@@ -12,6 +12,7 @@ const ContractsPage = lazy(() => import('@/features/contracts/pages/ContractsPag
 const ContractDetailPage = lazy(() => import('@/features/contracts/pages/ContractDetailPage'))
 const ContractFormPage = lazy(() => import('@/features/contracts/pages/ContractFormPage'))
 const PartiesPage = lazy(() => import('@/features/parties/pages/PartiesPage'))
+const PartyDetailPage = lazy(() => import('@/features/parties/pages/PartyDetailPage'))
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'))
 const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'))
 
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
           {
             path: '/parties',
             element: withSuspense(<PartiesPage />),
+          },
+          {
+            path: '/parties/:partyId',
+            element: withSuspense(<PartyDetailPage />),
           },
           // Admin-only routes
           {
