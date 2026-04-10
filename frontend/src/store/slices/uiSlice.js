@@ -1,7 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
-  sidebarOpen: true,
+  /** Mobile / tablet navigation drawer (Sheet) */
+  sidebarOpen: false,
   sidebarCollapsed: false,
 }
 

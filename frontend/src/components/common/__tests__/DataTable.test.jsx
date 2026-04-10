@@ -58,6 +58,8 @@ describe('DataTable', () => {
         pagination={{ page: 1, totalPages: 3, onPageChange: () => {} }}
       />
     )
-    expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument()
+    const pager = screen.getByLabelText('Table pagination')
+    expect(pager).toHaveTextContent(/page\s*1\s*of\s*3/i)
+    expect(screen.getByLabelText('Go to page')).toBeInTheDocument()
   })
 })

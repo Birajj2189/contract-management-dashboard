@@ -5,6 +5,9 @@ const AppError = require('../utils/AppError');
 const { buildPaginationMeta } = require('../utils/pagination');
 const { logEvent, ACTIONS } = require('./audit.service');
 
+/** All contract statuses (matches Prisma enum) — used for facet counts on list. */
+const CONTRACT_STATUS_KEYS = ['DRAFT', 'ACTIVE', 'EXECUTED', 'EXPIRED'];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Status transition map
 // Admin can bypass; regular users follow these rules.
@@ -63,7 +66,10 @@ async function listContracts(query, caller) {
     if (startDateTo) where.startDate.lte = startDateTo;
   }
 
-  const [contracts, total] = await prisma.$transaction([
+  const whereForStatusFacet = { ...where };
+  delete whereForStatusFacet.status;
+
+  const [contracts, total, statusGroups] = await prisma.$transaction([
     prisma.contract.findMany({
       where,
       include: CONTRACT_INCLUDE,
@@ -72,11 +78,21 @@ async function listContracts(query, caller) {
       take: limit,
     }),
     prisma.contract.count({ where }),
+    prisma.contract.groupBy({
+      by: ['status'],
+      where: whereForStatusFacet,
+      _count: { _all: true },
+    }),
   ]);
+
+  const statusCounts = Object.fromEntries(CONTRACT_STATUS_KEYS.map((s) => [s, 0]));
+  for (const row of statusGroups) {
+    statusCounts[row.status] = row._count._all;
+  }
 
   return {
     contracts,
-    meta: buildPaginationMeta({ total, page, limit }),
+    meta: { ...buildPaginationMeta({ total, page, limit }), statusCounts },
   };
 }
 

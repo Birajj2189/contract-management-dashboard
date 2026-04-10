@@ -36,7 +36,8 @@ const RecentActivity = ({ contracts = [], isLoading = false }) => {
             {contracts.map((c) => (
               <button
                 key={c.id}
-                className="flex w-full items-center justify-between rounded-lg px-1 py-1.5 text-left transition-colors hover:bg-muted/50"
+                type="button"
+                className="flex w-full items-center justify-between rounded-lg border border-transparent px-2 py-2 text-left transition-colors hover:border-border/60 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 onClick={() => navigate(`/contracts/${c.id}`)}
               >
                 <div className="min-w-0">

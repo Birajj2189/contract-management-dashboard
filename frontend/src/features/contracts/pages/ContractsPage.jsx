@@ -1,22 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Search, Filter, ArrowDownUp, CalendarRange } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import PageWrapper from '@/components/layout/PageWrapper'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Label } from '@/components/ui/Label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/Select'
 import ContractTable from '@/features/contracts/components/ContractTable'
+import ContractsFilterToolbar from '@/features/contracts/components/ContractsFilterToolbar'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { useContracts, useDeleteContract } from '@/features/contracts/hooks/useContractQueries'
 import { useDebounce } from '@/hooks/useDebounce'
-import { STATUS_OPTIONS } from '@/utils/statusColors'
 import env from '@/config/env'
 import { motion, useReducedMotion } from 'framer-motion'
 
@@ -58,7 +49,8 @@ const ContractsPage = () => {
   const { mutate: deleteContract, isPending: isDeleting } = useDeleteContract()
 
   const contracts = data?.contracts || []
-  const totalPages = data?.meta?.totalPages || 1
+  const meta = data?.meta
+  const totalPages = Math.max(1, meta?.totalPages ?? 1)
 
   const handleDelete = () => {
     if (!deleteTarget) return
@@ -80,123 +72,39 @@ const ContractsPage = () => {
         </Button>
       }
     >
-      {/* Filters + sort */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="relative min-w-0 flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search contracts..."
-            className="pl-9"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(1)
-            }}
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            <Select
-              value={statusFilter || 'ALL'}
-              onValueChange={(val) => {
-                setStatusFilter(val === 'ALL' ? '' : val)
-                setPage(1)
-              }}
-            >
-              <SelectTrigger className="w-[9.5rem]">
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All statuses</SelectItem>
-                {STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2">
-            <ArrowDownUp className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            <Select
-              value={sortPreset}
-              onValueChange={(val) => {
-                setSortPreset(val)
-                setPage(1)
-              }}
-            >
-              <SelectTrigger className="w-[13.5rem] sm:w-[15rem]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                {SORT_PRESETS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* Contract start date range (API: startDateFrom / startDateTo on contract.startDate) */}
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/20 px-3 py-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
-        <div className="flex items-center gap-2 text-muted-foreground sm:pb-2">
-          <CalendarRange className="h-4 w-4 shrink-0" aria-hidden />
-          <span className="text-sm font-medium text-foreground">Start date</span>
-        </div>
-        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
-          <div className="space-y-1.5 sm:min-w-[10.5rem]">
-            <Label htmlFor="contracts-start-from" className="text-xs text-muted-foreground">
-              From
-            </Label>
-            <Input
-              id="contracts-start-from"
-              type="date"
-              value={startDateFrom}
-              max={startDateTo || undefined}
-              className="w-full"
-              onChange={(e) => {
-                setStartDateFrom(e.target.value)
-                setPage(1)
-              }}
-            />
-          </div>
-          <div className="space-y-1.5 sm:min-w-[10.5rem]">
-            <Label htmlFor="contracts-start-to" className="text-xs text-muted-foreground">
-              To
-            </Label>
-            <Input
-              id="contracts-start-to"
-              type="date"
-              value={startDateTo}
-              min={startDateFrom || undefined}
-              className="w-full"
-              onChange={(e) => {
-                setStartDateTo(e.target.value)
-                setPage(1)
-              }}
-            />
-          </div>
-          {(startDateFrom || startDateTo) && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full shrink-0 sm:mb-0.5 sm:w-auto"
-              onClick={() => {
-                setStartDateFrom('')
-                setStartDateTo('')
-                setPage(1)
-              }}
-            >
-              Clear dates
-            </Button>
-          )}
-        </div>
-      </div>
+      <ContractsFilterToolbar
+        search={search}
+        onSearchChange={(v) => {
+          setSearch(v)
+          setPage(1)
+        }}
+        statusFilter={statusFilter}
+        onStatusChange={(v) => {
+          setStatusFilter(v)
+          setPage(1)
+        }}
+        statusCounts={meta?.statusCounts}
+        sortPreset={sortPreset}
+        onSortChange={(v) => {
+          setSortPreset(v)
+          setPage(1)
+        }}
+        sortPresets={SORT_PRESETS}
+        startDateFrom={startDateFrom}
+        startDateTo={startDateTo}
+        onDateChange={(field, v) => {
+          if (field === 'from') setStartDateFrom(v)
+          else setStartDateTo(v)
+          setPage(1)
+        }}
+        onClearDates={() => {
+          setStartDateFrom('')
+          setStartDateTo('')
+          setPage(1)
+        }}
+        totalFiltered={meta?.total}
+        isLoading={isLoading}
+      />
 
       <motion.div
         key={isLoading ? 'contracts-loading' : 'contracts-ready'}
@@ -207,7 +115,13 @@ const ContractsPage = () => {
         <ContractTable
           data={contracts}
           isLoading={isLoading}
-          pagination={{ page, totalPages, onPageChange: setPage }}
+          pagination={{
+            page,
+            totalPages,
+            total: meta?.total,
+            pageSize: meta?.limit ?? env.pageSize,
+            onPageChange: setPage,
+          }}
           onDelete={setDeleteTarget}
         />
       </motion.div>

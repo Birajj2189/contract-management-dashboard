@@ -14,7 +14,8 @@ const ContractTable = ({ data, isLoading, pagination, onDelete }) => {
       header: 'Title',
       render: (value, row) => (
         <button
-          className="max-w-[200px] truncate text-left font-medium text-primary hover:underline"
+          type="button"
+          className="max-w-[min(200px,45vw)] truncate rounded-md text-left text-sm font-medium text-primary underline-offset-4 transition-colors hover:bg-primary/5 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           onClick={() => navigate(`/contracts/${row.id}`)}
         >
           {value}
@@ -49,24 +50,32 @@ const ContractTable = ({ data, isLoading, pagination, onDelete }) => {
       render: (_value, row) => (
         <div className="flex justify-end gap-1">
           <Button
+            type="button"
             variant="ghost"
             size="icon"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground"
             onClick={() => navigate(`/contracts/${row.id}`)}
+            aria-label="View contract"
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
+            type="button"
             variant="ghost"
             size="icon"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground"
             onClick={() => navigate(`/contracts/${row.id}/edit`)}
+            aria-label="Edit contract"
           >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
+            type="button"
             variant="ghost"
             size="icon"
-            className="text-destructive hover:text-destructive"
+            className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => onDelete(row)}
+            aria-label="Delete contract"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

@@ -2,17 +2,22 @@ import { cn } from '@/utils/cn'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 
 const StatsCard = ({ title, value, description, icon: Icon, trend, className }) => (
-  <Card className={cn('', className)}>
-    <CardHeader className="flex flex-row items-center justify-between pb-2">
+  <Card
+    className={cn(
+      'hover:border-border hover:shadow-md motion-safe:transition-[box-shadow,border-color]',
+      className
+    )}
+  >
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
       {Icon && (
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-          <Icon className="h-4 w-4 text-primary" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shadow-inner">
+          <Icon className="h-4 w-4" />
         </div>
       )}
     </CardHeader>
     <CardContent>
-      <p className="text-2xl font-bold">{value ?? '—'}</p>
+      <p className="text-2xl font-bold tabular-nums tracking-tight">{value ?? '—'}</p>
       {description && (
         <p className="mt-1 text-xs text-muted-foreground">{description}</p>
       )}

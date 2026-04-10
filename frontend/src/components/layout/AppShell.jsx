@@ -1,30 +1,53 @@
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import { useSelector, useDispatch } from 'react-redux'
 import AnimatedOutlet from '@/components/motion/AnimatedOutlet'
-import { useSelector } from 'react-redux'
 import Sidebar from './Sidebar'
 import Header from './Header'
-import { selectSidebarOpen } from '@/store/slices/uiSlice'
-import { cn } from '@/utils/cn'
+import KeyboardShortcutsDialog from './KeyboardShortcutsDialog'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/Sheet'
+import { selectSidebarOpen, setSidebarOpen } from '@/store/slices/uiSlice'
+import { useMinWidth } from '@/hooks/useBreakpoint'
+import { useNavigationShortcuts } from '@/hooks/useNavigationShortcuts'
+
+const LG = 1024
 
 const AppShell = () => {
-  const sidebarOpen = useSelector(selectSidebarOpen)
+  const location = useLocation()
+  const dispatch = useDispatch()
+  const mobileNavOpen = useSelector(selectSidebarOpen)
+  const isLargeScreen = useMinWidth(LG)
+  const { helpOpen, setHelpOpen } = useNavigationShortcuts()
+
+  useEffect(() => {
+    dispatch(setSidebarOpen(false))
+  }, [location.pathname, dispatch])
+
+  useEffect(() => {
+    if (isLargeScreen) dispatch(setSidebarOpen(false))
+  }, [isLargeScreen, dispatch])
 
   return (
-    <div className="flex h-screen overflow-hidden bg-muted/20">
-      {/* Sidebar — hidden on mobile when closed */}
-      <div
-        className={cn(
-          'hidden md:flex md:flex-col',
-          !sidebarOpen && 'md:hidden'
-        )}
-      >
-        <Sidebar />
+    <div className="flex h-svh min-h-0 w-full max-w-[100vw] overflow-hidden bg-muted/40">
+      <div className="hidden h-full min-h-0 shrink-0 lg:flex lg:border-r lg:border-border/60 lg:bg-card/50 lg:shadow-sm">
+        <Sidebar mode="desktop" onOpenShortcutHelp={() => setHelpOpen(true)} />
       </div>
 
-      {/* Main content area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      {!isLargeScreen && (
+        <Sheet open={mobileNavOpen} onOpenChange={(open) => dispatch(setSidebarOpen(open))}>
+          <SheetContent side="left" className="border-0 p-0">
+            <SheetTitle className="sr-only">Main navigation</SheetTitle>
+            <Sidebar mode="sheet" onNavigate={() => dispatch(setSidebarOpen(false))} />
+          </SheetContent>
+        </Sheet>
+      )}
+
+      <KeyboardShortcutsDialog open={helpOpen} onOpenChange={setHelpOpen} />
+
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Header />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="mx-auto max-w-7xl">
+        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-5 sm:py-6 lg:px-8 lg:py-8">
             <AnimatedOutlet />
           </div>
         </main>
