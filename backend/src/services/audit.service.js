@@ -6,6 +6,9 @@ const AppError = require('../utils/AppError');
 // Known action constants — use these across services for consistency
 const ACTIONS = {
   USER_REGISTERED: 'USER_REGISTERED',
+  USER_CREATED_BY_ADMIN: 'USER_CREATED_BY_ADMIN',
+  USER_ROLE_CHANGED: 'USER_ROLE_CHANGED',
+  USER_STATUS_CHANGED: 'USER_STATUS_CHANGED',
   LOGIN: 'LOGIN',
   LOGOUT: 'LOGOUT',
   CONTRACT_CREATED: 'CONTRACT_CREATED',

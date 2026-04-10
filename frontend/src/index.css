@@ -39,4 +39,88 @@
   .scrollbar-thin {
     scrollbar-width: thin;
   }
+
+  @keyframes app-loader-float-a {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 0.55;
+    }
+    50% {
+      transform: translate(8%, -12%) scale(1.08);
+      opacity: 0.85;
+    }
+  }
+
+  @keyframes app-loader-float-b {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1.05);
+      opacity: 0.45;
+    }
+    50% {
+      transform: translate(-10%, 14%) scale(1);
+      opacity: 0.75;
+    }
+  }
+
+  @keyframes app-loader-logo-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  @keyframes app-loader-spin-smooth {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes app-loader-shimmer-bar {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0.65;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(340%);
+      opacity: 0.65;
+    }
+  }
+
+  .animate-app-loader-float-a {
+    animation: app-loader-float-a 11s ease-in-out infinite;
+  }
+
+  .animate-app-loader-float-b {
+    animation: app-loader-float-b 13s ease-in-out infinite;
+  }
+
+  .animate-app-loader-logo-float {
+    animation: app-loader-logo-float 3.2s ease-in-out infinite;
+  }
+
+  .animate-app-loader-spin-smooth {
+    animation: app-loader-spin-smooth 1.15s linear infinite;
+  }
+
+  .animate-app-loader-shimmer-bar {
+    animation: app-loader-shimmer-bar 1.85s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-app-loader-float-a,
+    .animate-app-loader-float-b,
+    .animate-app-loader-logo-float,
+    .animate-app-loader-spin-smooth,
+    .animate-app-loader-shimmer-bar {
+      animation: none !important;
+    }
+  }
 }

@@ -14,6 +14,7 @@ const ContractFormPage = lazy(() => import('@/features/contracts/pages/ContractF
 const PartiesPage = lazy(() => import('@/features/parties/pages/PartiesPage'))
 const PartyDetailPage = lazy(() => import('@/features/parties/pages/PartyDetailPage'))
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'))
+const UserDetailPage = lazy(() => import('@/features/users/pages/UserDetailPage'))
 const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'))
 
 const withSuspense = (element) => <Suspense fallback={<RouteFallback />}>{element}</Suspense>
@@ -81,6 +82,10 @@ const router = createBrowserRouter([
               {
                 path: '/users',
                 element: withSuspense(<UsersPage />),
+              },
+              {
+                path: '/users/:userId',
+                element: withSuspense(<UserDetailPage />),
               },
               {
                 path: '/reports',

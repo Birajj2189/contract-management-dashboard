@@ -79,16 +79,25 @@ const Sidebar = ({ mode = 'desktop', onNavigate, onOpenShortcutHelp, className }
     >
       <div
         className={cn(
-          'flex h-14 shrink-0 items-center border-b border-border/60 px-3',
-          isSheet && 'pr-12'
+          'flex shrink-0 border-b border-border/60',
+          isSheet && 'min-h-14 items-center gap-2 pl-3 pr-14',
+          !isSheet && collapsed && 'flex-col items-center gap-2 px-2 py-3',
+          !isSheet && !collapsed && 'h-14 items-center gap-2 px-3'
         )}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
+        <div
+          className={cn(
+            'flex items-center gap-2.5',
+            isSheet && 'min-w-0 flex-1',
+            !isSheet && collapsed && 'flex-col gap-2',
+            !isSheet && !collapsed && 'min-w-0 flex-1'
+          )}
+        >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <LogoIcon className="h-4 w-4" />
           </div>
           {!collapsed && (
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1 overflow-hidden">
               <span className="block truncate text-sm font-semibold tracking-tight">ContractHub</span>
               {isSheet && (
                 <span className="block truncate text-xs text-muted-foreground">Contract management</span>
@@ -101,12 +110,12 @@ const Sidebar = ({ mode = 'desktop', onNavigate, onOpenShortcutHelp, className }
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0 text-muted-foreground"
+            className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-accent/80"
             onClick={() => dispatch(toggleSidebarCollapsed())}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <ChevronLeft
-              className={cn('h-4 w-4 transition-transform duration-200', collapsed && 'rotate-180')}
+              className={cn('h-4 w-4 transition-transform duration-300 ease-out', collapsed && 'rotate-180')}
             />
           </Button>
         )}

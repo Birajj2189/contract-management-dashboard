@@ -5,7 +5,7 @@ import AnimatedOutlet from '@/components/motion/AnimatedOutlet'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import KeyboardShortcutsDialog from './KeyboardShortcutsDialog'
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/Sheet'
+import MobileNavDrawer from './MobileNavDrawer'
 import { selectSidebarOpen, setSidebarOpen } from '@/store/slices/uiSlice'
 import { useMinWidth } from '@/hooks/useBreakpoint'
 import { useNavigationShortcuts } from '@/hooks/useNavigationShortcuts'
@@ -33,14 +33,12 @@ const AppShell = () => {
         <Sidebar mode="desktop" onOpenShortcutHelp={() => setHelpOpen(true)} />
       </div>
 
-      {!isLargeScreen && (
-        <Sheet open={mobileNavOpen} onOpenChange={(open) => dispatch(setSidebarOpen(open))}>
-          <SheetContent side="left" className="border-0 p-0">
-            <SheetTitle className="sr-only">Main navigation</SheetTitle>
-            <Sidebar mode="sheet" onNavigate={() => dispatch(setSidebarOpen(false))} />
-          </SheetContent>
-        </Sheet>
-      )}
+      <MobileNavDrawer
+        open={mobileNavOpen && !isLargeScreen}
+        onOpenChange={(next) => dispatch(setSidebarOpen(next))}
+      >
+        <Sidebar mode="sheet" onNavigate={() => dispatch(setSidebarOpen(false))} />
+      </MobileNavDrawer>
 
       <KeyboardShortcutsDialog open={helpOpen} onOpenChange={setHelpOpen} />
 

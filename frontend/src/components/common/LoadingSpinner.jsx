@@ -1,5 +1,5 @@
 import { cn } from '@/utils/cn'
-import { Skeleton } from '@/components/ui/Skeleton'
+import AppLoadingScreen from '@/components/common/AppLoadingScreen'
 
 const LoadingSpinner = ({ className, size = 'default' }) => {
   const sizes = {
@@ -21,17 +21,7 @@ const LoadingSpinner = ({ className, size = 'default' }) => {
   )
 }
 
-const PageLoader = () => (
-  <div
-    className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 py-12"
-    role="status"
-    aria-label="Loading"
-  >
-    <Skeleton className="h-10 w-44 max-w-full rounded-lg" />
-    <Skeleton className="h-4 w-64 max-w-full" />
-    <Skeleton className="h-36 w-full max-w-md rounded-xl" />
-  </div>
-)
+const PageLoader = () => <AppLoadingScreen variant="fullscreen" />
 
 const InlineLoader = ({ text = 'Loading...' }) => (
   <div className="flex items-center gap-2 text-sm text-muted-foreground">
