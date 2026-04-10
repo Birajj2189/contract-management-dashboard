@@ -12,6 +12,7 @@ const cookieParser = require('cookie-parser');
 
 const authRoutes = require('./routes/auth.routes');
 const contractRoutes = require('./routes/contract.routes');
+const userRoutes = require('./routes/user.routes');
 const errorHandler = require('./middlewares/errorHandler');
 const { sendError } = require('./utils/response');
 
@@ -22,6 +23,10 @@ const app = express();
 // ─────────────────────────────────────────────────────────────────────────────
 
 app.set('trust proxy', 1); // Required for accurate IP behind Render/Nginx
+
+// JSON APIs must not use conditional GET (ETag) — 304 responses have no body, so axios
+// and browsers end up with empty JSON and React Query cache breaks (blank detail pages).
+app.set('etag', false);
 
 app.use(helmet());
 
@@ -59,6 +64,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/contracts', contractRoutes);
+app.use('/api/users', userRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 404 Handler

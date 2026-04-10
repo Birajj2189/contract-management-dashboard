@@ -16,8 +16,10 @@ const env = require('../config/env');
 function errorHandler(err, req, res, next) {
   // ── Zod validation error ──────────────────────────────────────────────────
   if (err instanceof ZodError) {
-    const details = err.errors.map((e) => ({
-      field: e.path.join('.'),
+    // Zod 4 exposes `issues`; `errors` is undefined (Zod 3 had a getter — removed in v4).
+    const issues = err.issues ?? [];
+    const details = issues.map((e) => ({
+      field: Array.isArray(e.path) ? e.path.join('.') : '',
       message: e.message,
     }));
     return sendError(res, {

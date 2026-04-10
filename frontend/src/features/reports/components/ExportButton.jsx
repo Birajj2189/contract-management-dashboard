@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/Button'
 import { Download } from 'lucide-react'
 import { formatDate } from '@/utils/formatDate'
 
-const ExportButton = ({ data }) => {
+const ExportButton = ({ data, disabled: disabledProp = false }) => {
   const handleExport = () => {
     if (!data?.length) return
 
@@ -28,7 +28,12 @@ const ExportButton = ({ data }) => {
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={handleExport} disabled={!data?.length}>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleExport}
+      disabled={disabledProp || !data?.length}
+    >
       <Download className="mr-2 h-4 w-4" />
       Export CSV
     </Button>

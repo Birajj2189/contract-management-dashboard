@@ -7,6 +7,7 @@ const {
   createContractSchema,
   updateContractSchema,
   listContractsQuerySchema,
+  versionDiffQuerySchema,
 } = require('../validators/contract.validator');
 const controller = require('../controllers/contract.controller');
 
@@ -28,6 +29,12 @@ router.put('/:id', validate(updateContractSchema), controller.update);
 router.delete('/:id', controller.softDelete);
 
 // ── Version history ───────────────────────────────────────────────────────────
+// Static path before `/:versionId` so "compare" is not parsed as a UUID
+router.get(
+  '/:id/versions/compare',
+  validate(versionDiffQuerySchema, 'query'),
+  versionController.diffVersions
+);
 router.get('/:id/versions', versionController.listVersions);
 router.get('/:id/versions/:versionId', versionController.getVersion);
 

@@ -8,6 +8,7 @@ import StatsCard from '@/features/dashboard/components/StatsCard'
 import ContractStatusChart from '@/features/dashboard/components/ContractStatusChart'
 import { FileText, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
 import env from '@/config/env'
+import { StatsGridSkeleton } from '@/components/skeletons/StatsCardSkeleton'
 
 const ReportsPage = () => {
   const [filters, setFilters] = useState({ status: '', year: '' })
@@ -33,25 +34,41 @@ const ReportsPage = () => {
     <PageWrapper
       title="Reports"
       description="Analytics and export for your contracts"
-      actions={<ExportButton data={filtered} />}
+      actions={<ExportButton data={filtered} disabled={isLoading} />}
     >
-      {/* Summary stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard title="Total" value={filtered.length} icon={FileText} />
-        <StatsCard title="Active" value={statusMap.ACTIVE || 0} icon={CheckCircle} />
-        <StatsCard title="Draft" value={statusMap.DRAFT || 0} icon={Clock} />
-        <StatsCard title="Expired" value={statusMap.EXPIRED || 0} icon={AlertTriangle} />
-      </div>
+      {isLoading ? (
+        <>
+          <StatsGridSkeleton />
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <ContractStatusChart data={{}} isLoading />
+            </div>
+            <div className="space-y-4 lg:col-span-2">
+              <ReportFilters filters={filters} onChange={setFilters} />
+              <ReportTable data={[]} isLoading />
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard title="Total" value={filtered.length} icon={FileText} />
+            <StatsCard title="Active" value={statusMap.ACTIVE || 0} icon={CheckCircle} />
+            <StatsCard title="Draft" value={statusMap.DRAFT || 0} icon={Clock} />
+            <StatsCard title="Expired" value={statusMap.EXPIRED || 0} icon={AlertTriangle} />
+          </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-1">
-          <ContractStatusChart data={statusMap} />
-        </div>
-        <div className="space-y-4 lg:col-span-2">
-          <ReportFilters filters={filters} onChange={setFilters} />
-          <ReportTable data={filtered} isLoading={isLoading} />
-        </div>
-      </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <ContractStatusChart data={statusMap} />
+            </div>
+            <div className="space-y-4 lg:col-span-2">
+              <ReportFilters filters={filters} onChange={setFilters} />
+              <ReportTable data={filtered} isLoading={false} />
+            </div>
+          </div>
+        </>
+      )}
     </PageWrapper>
   )
 }

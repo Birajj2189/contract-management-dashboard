@@ -7,6 +7,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 const STATUS_COLORS = {
   DRAFT: '#94a3b8',
@@ -15,7 +16,7 @@ const STATUS_COLORS = {
   EXPIRED: '#ef4444',
 }
 
-const ContractStatusChart = ({ data = [] }) => {
+const ContractStatusChart = ({ data = {}, isLoading = false }) => {
   const chartData = Object.entries(data).map(([status, count]) => ({
     name: status.charAt(0) + status.slice(1).toLowerCase(),
     value: count,
@@ -28,7 +29,15 @@ const ContractStatusChart = ({ data = [] }) => {
         <CardTitle className="text-base">Contracts by status</CardTitle>
       </CardHeader>
       <CardContent>
-        {chartData.length === 0 ? (
+        {isLoading ? (
+          <div
+            className="flex h-[200px] items-center justify-center"
+            role="status"
+            aria-label="Loading chart"
+          >
+            <Skeleton className="h-[180px] w-[180px] rounded-full" />
+          </div>
+        ) : chartData.length === 0 ? (
           <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
             No data available
           </div>

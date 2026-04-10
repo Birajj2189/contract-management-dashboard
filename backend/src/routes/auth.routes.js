@@ -34,7 +34,8 @@ const authLimiter = rateLimit({
 // Public
 router.post('/register', authLimiter, validate(registerSchema), controller.register);
 router.post('/login', authLimiter, validate(loginSchema), controller.login);
-router.post('/refresh', controller.refresh);  // Auth via HttpOnly cookie
+router.get('/session', controller.session); // 200 for guests — no 401 when no cookie
+router.post('/refresh', controller.refresh); // Auth via HttpOnly cookie
 
 // Protected
 router.post('/logout', authenticate, controller.logout);

@@ -16,6 +16,7 @@ const createContractSchema = z.object({
   description: z.string().trim().max(5000).optional(),
   startDate: z.coerce.date({ invalid_type_error: 'startDate must be a valid date' }),
   endDate: z.coerce.date({ invalid_type_error: 'endDate must be a valid date' }),
+  status: z.enum(CONTRACT_STATUSES).default('DRAFT'),
   parties: z
     .array(partySchema)
     .min(1, 'At least one party is required')
@@ -51,7 +52,18 @@ const listContractsQuerySchema = z.object({
   sortBy: z.enum(['createdAt', 'updatedAt']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(20),
+  // Must allow at least frontend VITE_MAX_LIST_LIMIT (default 500) for parties/reports/dashboard
+  limit: z.coerce.number().int().positive().max(500).default(20),
 });
 
-module.exports = { createContractSchema, updateContractSchema, listContractsQuerySchema };
+const versionDiffQuerySchema = z.object({
+  from: z.string().uuid('from must be a valid version id'),
+  to: z.string().uuid('to must be a valid version id'),
+});
+
+module.exports = {
+  createContractSchema,
+  updateContractSchema,
+  listContractsQuerySchema,
+  versionDiffQuerySchema,
+};

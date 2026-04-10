@@ -51,7 +51,10 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config
 
     const is401 = error.response?.status === 401
-    const isRefreshEndpoint = originalRequest.url?.includes('/auth/refresh')
+    // Match relative or absolute URL (axios may set either)
+    const reqUrl = originalRequest.url || ''
+    const isRefreshEndpoint =
+      reqUrl.includes('/auth/refresh') || originalRequest._isRefreshCall === true
     const alreadyRetried = originalRequest._retry
 
     if (is401 && !isRefreshEndpoint && !alreadyRetried) {
@@ -71,7 +74,9 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const response = await axiosInstance.post('/auth/refresh')
+        const response = await axiosInstance.post('/auth/refresh', {}, {
+          _isRefreshCall: true,
+        })
         const { accessToken } = response.data.data
 
         // Update Redux store with new token
@@ -84,10 +89,10 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null)
 
-        // Refresh failed — clear auth state and redirect to login
+        // Refresh failed — clear auth. Do NOT use window.location here: a full reload
+        // re-runs bootstrap (getMe/refresh) and causes an infinite 401 loop on /login.
         const { clearAuth } = await import('@/store/slices/authSlice')
         store.dispatch(clearAuth())
-        window.location.href = '/login'
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false

@@ -8,6 +8,7 @@ const {
   generateRefreshToken,
   hashToken,
   getRefreshTokenExpiry,
+  verifyAccessToken,
 } = require('../utils/jwt');
 const AppError = require('../utils/AppError');
 const { logEvent, ACTIONS } = require('./audit.service');
@@ -208,6 +209,25 @@ async function getMe(userId) {
   return user;
 }
 
+/**
+ * Attempts to restore a session from the HttpOnly refresh cookie.
+ * Used by GET /api/auth/session so guests get 200 (not 401) and server logs stay clean.
+ *
+ * @param {string|undefined} rawToken
+ * @returns {Promise<{ accessToken: string, rawRefreshToken: string, user: object } | null>}
+ */
+async function restoreSession(rawToken) {
+  if (!rawToken) return null;
+  try {
+    const { accessToken, rawRefreshToken } = await refreshTokens(rawToken);
+    const { sub } = verifyAccessToken(accessToken);
+    const user = await getMe(sub);
+    return { accessToken, rawRefreshToken, user };
+  } catch {
+    return null;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -254,4 +274,4 @@ async function _revokeTokenFamily(rootTokenHash) {
   });
 }
 
-module.exports = { register, login, refreshTokens, logout, getMe };
+module.exports = { register, login, refreshTokens, logout, getMe, restoreSession };

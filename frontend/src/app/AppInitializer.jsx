@@ -1,12 +1,14 @@
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { setCredentials, setInitializing } from '@/store/slices/authSlice'
-import authService from '@/services/authService'
+import axiosInstance from '@/services/axiosInstance'
 
 /**
- * Runs once on mount to restore the auth session from the HttpOnly refresh cookie.
- * Calls GET /api/auth/me which will trigger the axios interceptor to silently
- * refresh the access token if needed.
+ * Restores the session on app load using the HttpOnly refresh cookie.
+ *
+ * Uses GET /api/auth/session which always returns 200: either { authenticated: true, user, accessToken }
+ * or { authenticated: false }. That avoids POST /refresh returning 401 for every guest visit
+ * (which is not a bug, but looks like an error in server logs).
  */
 const AppInitializer = ({ children }) => {
   const dispatch = useDispatch()
@@ -14,9 +16,14 @@ const AppInitializer = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const res = await authService.getMe()
-        const { user, accessToken } = res.data.data
-        dispatch(setCredentials({ user, accessToken }))
+        const res = await axiosInstance.get('/auth/session')
+        const { authenticated, accessToken, user } = res.data.data
+
+        if (authenticated && accessToken && user) {
+          dispatch(setCredentials({ user, accessToken }))
+        } else {
+          dispatch(setInitializing(false))
+        }
       } catch {
         dispatch(setInitializing(false))
       }

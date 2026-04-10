@@ -8,7 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/Table'
 import { Button } from '@/components/ui/Button'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner'
+import { Skeleton } from '@/components/ui/Skeleton'
 import EmptyState from '@/components/common/EmptyState'
 import { ChevronLeft, ChevronRight, FileX } from 'lucide-react'
 import { cn } from '@/utils/cn'
@@ -32,12 +32,18 @@ const DataTable = memo(
     emptyDescription,
     emptyAction,
     className,
+    skeletonRowCount = 8,
   }) => {
     const { page, totalPages, onPageChange } = pagination || {}
 
     return (
       <div className={cn('space-y-4', className)}>
-        <div className="rounded-lg border">
+        <div
+          className="rounded-lg border"
+          role={isLoading ? 'status' : undefined}
+          aria-busy={isLoading || undefined}
+          aria-label={isLoading ? 'Loading table data' : undefined}
+        >
           <Table>
             <TableHeader>
               <TableRow>
@@ -50,13 +56,28 @@ const DataTable = memo(
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-32 text-center">
-                    <div className="flex justify-center">
-                      <LoadingSpinner />
-                    </div>
-                  </TableCell>
-                </TableRow>
+                Array.from({ length: skeletonRowCount }).map((_, rowIndex) => (
+                  <TableRow key={`sk-${rowIndex}`}>
+                    {columns.map((col) => (
+                      <TableCell key={col.key} className={col.className}>
+                        {col.key === 'actions' ? (
+                          <div className="flex justify-end gap-1">
+                            <Skeleton className="h-8 w-8 shrink-0" />
+                            <Skeleton className="h-8 w-8 shrink-0" />
+                            <Skeleton className="h-8 w-8 shrink-0" />
+                          </div>
+                        ) : (
+                          <Skeleton
+                            className={cn(
+                              'h-4 w-full',
+                              col.key === 'title' ? 'max-w-[min(220px,100%)]' : 'max-w-[100px]'
+                            )}
+                          />
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
               ) : data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-32 p-0">

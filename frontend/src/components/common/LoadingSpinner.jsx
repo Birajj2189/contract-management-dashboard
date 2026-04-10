@@ -1,4 +1,5 @@
 import { cn } from '@/utils/cn'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 const LoadingSpinner = ({ className, size = 'default' }) => {
   const sizes = {
@@ -21,8 +22,14 @@ const LoadingSpinner = ({ className, size = 'default' }) => {
 }
 
 const PageLoader = () => (
-  <div className="flex h-[60vh] items-center justify-center">
-    <LoadingSpinner size="lg" />
+  <div
+    className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 py-12"
+    role="status"
+    aria-label="Loading"
+  >
+    <Skeleton className="h-10 w-44 max-w-full rounded-lg" />
+    <Skeleton className="h-4 w-64 max-w-full" />
+    <Skeleton className="h-36 w-full max-w-md rounded-xl" />
   </div>
 )
 

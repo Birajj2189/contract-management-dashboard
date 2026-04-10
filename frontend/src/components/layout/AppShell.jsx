@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import AnimatedOutlet from '@/components/motion/AnimatedOutlet'
 import { useSelector } from 'react-redux'
 import Sidebar from './Sidebar'
 import Header from './Header'
@@ -25,7 +25,7 @@ const AppShell = () => {
         <Header />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="mx-auto max-w-7xl">
-            <Outlet />
+            <AnimatedOutlet />
           </div>
         </main>
       </div>

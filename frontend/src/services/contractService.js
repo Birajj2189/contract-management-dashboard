@@ -15,6 +15,9 @@ const contractService = {
 
   getVersion: (id, versionId) => axiosInstance.get(`/contracts/${id}/versions/${versionId}`),
 
+  compareVersions: (id, params) =>
+    axiosInstance.get(`/contracts/${id}/versions/compare`, { params }),
+
   getAudit: (id) => axiosInstance.get(`/contracts/${id}/audit`),
 }
 

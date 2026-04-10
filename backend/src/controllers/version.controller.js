@@ -27,4 +27,30 @@ async function getVersion(req, res, next) {
   }
 }
 
-module.exports = { listVersions, getVersion };
+function _slimVersionRow(v) {
+  return {
+    id: v.id,
+    versionNumber: v.versionNumber,
+    createdAt: v.createdAt,
+    changedBy: v.changedBy,
+  };
+}
+
+// GET /api/contracts/:id/versions/compare?from=&to=
+async function diffVersions(req, res, next) {
+  try {
+    const { from, to } = req.validatedQuery;
+    const result = await versionService.diffVersions(req.params.id, from, to, req.user);
+    sendSuccess(res, {
+      data: {
+        from: _slimVersionRow(result.from),
+        to: _slimVersionRow(result.to),
+        changes: result.changes,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { listVersions, getVersion, diffVersions };

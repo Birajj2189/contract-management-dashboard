@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import StatusBadge from '@/features/contracts/components/StatusBadge'
 import { formatRelative } from '@/utils/formatDate'
 import { Clock } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 
-const RecentActivity = ({ contracts = [] }) => {
+const RecentActivity = ({ contracts = [], isLoading = false }) => {
   const navigate = useNavigate()
 
   return (
@@ -16,7 +17,19 @@ const RecentActivity = ({ contracts = [] }) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {contracts.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-3" role="status" aria-label="Loading recent contracts">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-2">
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Skeleton className="h-4 w-full max-w-[240px]" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-6 w-16 shrink-0 rounded-full" />
+              </div>
+            ))}
+          </div>
+        ) : contracts.length === 0 ? (
           <p className="text-sm text-muted-foreground">No recent activity.</p>
         ) : (
           <div className="space-y-3">

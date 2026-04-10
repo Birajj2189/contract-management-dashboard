@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { ProtectedRoute, PublicOnlyRoute, RoleGuard } from './guards'
-import { PageLoader } from '@/components/common/LoadingSpinner'
+import RouteFallback from '@/components/skeletons/RouteFallback'
 
 // Lazy load all pages
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
@@ -15,7 +15,7 @@ const PartiesPage = lazy(() => import('@/features/parties/pages/PartiesPage'))
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'))
 const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'))
 
-const withSuspense = (element) => <Suspense fallback={<PageLoader />}>{element}</Suspense>
+const withSuspense = (element) => <Suspense fallback={<RouteFallback />}>{element}</Suspense>
 
 const router = createBrowserRouter([
   // ─── Public only (unauthenticated) ──────────────────────────────────────

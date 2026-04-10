@@ -115,6 +115,17 @@ async function getContract(contractId, caller) {
 async function createContract(dto, caller) {
   const { parties, ...contractData } = dto;
 
+  if (caller.role !== 'ADMIN') {
+    const allowedCreate = ['DRAFT', 'ACTIVE'];
+    if (!allowedCreate.includes(contractData.status)) {
+      throw new AppError(
+        'When creating a contract you may only set status to DRAFT or ACTIVE.',
+        422,
+        'INVALID_STATUS'
+      );
+    }
+  }
+
   const contract = await prisma.$transaction(async (tx) => {
     const created = await tx.contract.create({
       data: {

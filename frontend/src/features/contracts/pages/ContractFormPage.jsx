@@ -1,24 +1,26 @@
 import { useParams } from 'react-router-dom'
 import PageWrapper from '@/components/layout/PageWrapper'
 import ContractForm from '@/features/contracts/components/ContractForm'
+import { useAuth } from '@/hooks/useAuth'
 import {
   useContract,
   useCreateContract,
   useUpdateContract,
 } from '@/features/contracts/hooks/useContractQueries'
-import { PageLoader } from '@/components/common/LoadingSpinner'
+import ContractFormSkeleton from '@/components/skeletons/ContractFormSkeleton'
 import { Card, CardContent } from '@/components/ui/Card'
 import { format } from 'date-fns'
 
 const ContractFormPage = () => {
   const { id } = useParams()
   const isEdit = !!id
+  const { isAdmin } = useAuth()
 
   const { data: contract, isLoading } = useContract(id)
   const { mutate: createContract, isPending: isCreating } = useCreateContract()
   const { mutate: updateContract, isPending: isUpdating } = useUpdateContract(id)
 
-  if (isEdit && isLoading) return <PageLoader />
+  if (isEdit && isLoading) return <ContractFormSkeleton />
 
   const defaultValues = isEdit && contract
     ? {
@@ -27,6 +29,14 @@ const ContractFormPage = () => {
         startDate: contract.startDate ? format(new Date(contract.startDate), 'yyyy-MM-dd') : '',
         endDate: contract.endDate ? format(new Date(contract.endDate), 'yyyy-MM-dd') : '',
         status: contract.status,
+        parties:
+          Array.isArray(contract.parties) && contract.parties.length > 0
+            ? contract.parties.map((p) => ({
+                name: p.name ?? '',
+                email: p.email ?? '',
+                role: p.role ?? '',
+              }))
+            : [{ name: '', email: '', role: '' }],
       }
     : undefined
 
@@ -51,6 +61,7 @@ const ContractFormPage = () => {
               onSubmit={handleSubmit}
               isLoading={isCreating || isUpdating}
               isEdit={isEdit}
+              isAdmin={isAdmin}
             />
           </CardContent>
         </Card>

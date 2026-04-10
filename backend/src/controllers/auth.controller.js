@@ -53,6 +53,40 @@ async function login(req, res, next) {
 }
 
 // ─────────────────────────────────────────────
+// GET /api/auth/session  (public — no 401 for guests; avoids noisy logs on landing)
+// ─────────────────────────────────────────────
+async function session(req, res, next) {
+  try {
+    const rawToken = req.cookies?.[REFRESH_COOKIE_NAME];
+    const restored = await authService.restoreSession(rawToken);
+
+    if (!restored) {
+      if (rawToken) {
+        res.clearCookie(REFRESH_COOKIE_NAME, { ...cookieOptions, maxAge: 0 });
+      }
+      return sendSuccess(res, {
+        data: { authenticated: false },
+      });
+    }
+
+    res.cookie(REFRESH_COOKIE_NAME, restored.rawRefreshToken, {
+      ...cookieOptions,
+      maxAge: _parseDurationMs(process.env.JWT_REFRESH_EXPIRES_IN ?? '7d'),
+    });
+
+    return sendSuccess(res, {
+      data: {
+        authenticated: true,
+        accessToken: restored.accessToken,
+        user: restored.user,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─────────────────────────────────────────────
 // POST /api/auth/refresh
 // ─────────────────────────────────────────────
 async function refresh(req, res, next) {
@@ -109,4 +143,4 @@ function _parseDurationMs(str) {
   return u === 'd' ? v * 86400000 : u === 'h' ? v * 3600000 : v * 60000;
 }
 
-module.exports = { register, login, refresh, logout, me };
+module.exports = { register, login, session, refresh, logout, me };

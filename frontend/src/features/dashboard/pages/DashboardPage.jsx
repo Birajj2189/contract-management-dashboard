@@ -6,10 +6,15 @@ import RecentActivity from '@/features/dashboard/components/RecentActivity'
 import { useAuth } from '@/hooks/useAuth'
 import { FileText, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
 import env from '@/config/env'
+import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton'
+import { StaggerContainer, StaggerItem } from '@/components/motion/Stagger'
+import { motion, useReducedMotion } from 'framer-motion'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 const DashboardPage = () => {
   const { user } = useAuth()
-  const { data } = useContracts({ limit: env.maxListLimit })
+  const reduceMotion = useReducedMotion()
+  const { data, isPending } = useContracts({ limit: env.maxListLimit })
 
   const contracts = data?.contracts || []
 
@@ -28,33 +33,80 @@ const DashboardPage = () => {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 6)
 
+  if (isPending) {
+    return (
+      <PageWrapper
+        title={
+          <span className="block">
+            <span className="sr-only">Loading dashboard</span>
+            <Skeleton className="h-7 w-64 max-w-[85vw]" aria-hidden />
+          </span>
+        }
+        description={<Skeleton className="h-4 w-72 max-w-full" aria-hidden />}
+      >
+        <DashboardSkeleton />
+      </PageWrapper>
+    )
+  }
+
   return (
     <PageWrapper
       title={`Good ${getTimeOfDay()}, ${user?.name?.split(' ')[0] || 'there'}`}
       description="Here's an overview of your contracts"
     >
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard title="Total contracts" value={total} icon={FileText} />
-        <StatsCard title="Active" value={active} icon={CheckCircle} description="Currently active" />
-        <StatsCard title="Draft" value={draft} icon={Clock} description="Pending activation" />
-        <StatsCard
-          title="Expired"
-          value={expired}
-          icon={AlertTriangle}
-          description="Requires attention"
-        />
-      </div>
+      <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StaggerItem>
+          <motion.div
+            whileHover={reduceMotion ? undefined : { y: -2 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+          >
+            <StatsCard title="Total contracts" value={total} icon={FileText} />
+          </motion.div>
+        </StaggerItem>
+        <StaggerItem>
+          <motion.div
+            whileHover={reduceMotion ? undefined : { y: -2 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+          >
+            <StatsCard title="Active" value={active} icon={CheckCircle} description="Currently active" />
+          </motion.div>
+        </StaggerItem>
+        <StaggerItem>
+          <motion.div
+            whileHover={reduceMotion ? undefined : { y: -2 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+          >
+            <StatsCard title="Draft" value={draft} icon={Clock} description="Pending activation" />
+          </motion.div>
+        </StaggerItem>
+        <StaggerItem>
+          <motion.div
+            whileHover={reduceMotion ? undefined : { y: -2 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+          >
+            <StatsCard
+              title="Expired"
+              value={expired}
+              icon={AlertTriangle}
+              description="Requires attention"
+            />
+          </motion.div>
+        </StaggerItem>
+      </StaggerContainer>
 
-      {/* Chart + Recent */}
-      <div className="grid gap-4 lg:grid-cols-5">
+      <motion.div
+        className="grid gap-4 lg:grid-cols-5"
+        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: reduceMotion ? 0 : 0.28, delay: reduceMotion ? 0 : 0.12 }}
+      >
         <div className="lg:col-span-2">
           <ContractStatusChart data={statusMap} />
         </div>
         <div className="lg:col-span-3">
           <RecentActivity contracts={recent} />
         </div>
-      </div>
+      </motion.div>
     </PageWrapper>
   )
 }
