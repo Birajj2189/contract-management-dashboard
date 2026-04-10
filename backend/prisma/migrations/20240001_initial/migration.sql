@@ -2,8 +2,14 @@
 -- Contract Management Dashboard — Initial Schema
 -- Run with: npx prisma migrate deploy (when DATABASE_URL is set)
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- Enable UUID extension (requires superuser the first time; safe to skip if already installed)
+-- Run as superuser before deploying if not already present:
+--   psql -U postgres -d contract_db -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
+DO $$ BEGIN
+  CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+EXCEPTION WHEN insufficient_privilege THEN
+  RAISE NOTICE 'pgcrypto extension already exists or requires superuser — skipping.';
+END $$;
 
 -- Enums
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER');

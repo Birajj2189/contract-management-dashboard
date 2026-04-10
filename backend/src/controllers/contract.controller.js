@@ -8,7 +8,9 @@ const { sendSuccess } = require('../utils/response');
 // ─────────────────────────────────────────────
 async function list(req, res, next) {
   try {
-    const { contracts, meta } = await contractService.listContracts(req.query, req.user);
+    // req.validatedQuery is set by the validate() middleware when target='query'
+    // (Express 5 makes req.query a read-only getter)
+    const { contracts, meta } = await contractService.listContracts(req.validatedQuery, req.user);
     sendSuccess(res, { data: { contracts }, meta });
   } catch (err) {
     next(err);

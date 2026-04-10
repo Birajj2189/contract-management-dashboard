@@ -1,0 +1,1161 @@
+openapi: 3.0.3
+
+info:
+  title: Contract Management API
+  version: 1.0.0
+  description: |
+    Production-grade REST API for the Contract Management Dashboard.
+
+    ## Authentication
+    This API uses a dual-token strategy:
+    - **Access Token** (JWT, 15 min lifetime) — sent in the `Authorization: Bearer <token>` header
+    - **Refresh Token** (opaque, 7 day lifetime) — stored in an `HttpOnly` cookie named `refreshToken`
+
+    Every call to `POST /api/auth/refresh` rotates the refresh token (old one is immediately revoked).
+
+    ## Response Envelope
+    All responses follow a consistent shape:
+    ```json
+    { "success": true, "data": { ... }, "meta": { ... } }
+    { "success": false, "error": { "code": "...", "message": "...", "details": [...] } }
+    ```
+
+servers:
+  - url: http://localhost:5001
+    description: Local development
+  - url: https://your-render-service.onrender.com
+    description: Production (Render)
+
+tags:
+  - name: Auth
+    description: User registration, login, token refresh, logout, and profile
+  - name: Contracts
+    description: Create, read, update, and soft-delete contracts
+  - name: Versions
+    description: Version history snapshots for contracts
+  - name: Audit
+    description: Activity timeline (audit log) for contracts
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Security Schemes
+# ─────────────────────────────────────────────────────────────────────────────
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Access token obtained from /api/auth/login or /api/auth/register"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Reusable Schemas
+  # ───────────────────────────────────────────────────────────────────────────
+
+  schemas:
+
+    # ── Common ──────────────────────────────────────────────────────────────
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 42
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        totalPages:
+          type: integer
+          example: 3
+        hasNextPage:
+          type: boolean
+          example: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Input validation failed
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: email
+                  message:
+                    type: string
+                    example: Invalid email address
+
+    # ── User ────────────────────────────────────────────────────────────────
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        name:
+          type: string
+          example: Jane Smith
+        email:
+          type: string
+          format: email
+          example: jane@example.com
+        role:
+          type: string
+          enum: [USER, ADMIN]
+          example: USER
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-04-10T12:00:00.000Z"
+
+    # ── Contract Party ───────────────────────────────────────────────────────
+
+    ContractParty:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Acme Corp
+        email:
+          type: string
+          format: email
+          example: legal@acme.com
+          nullable: true
+        role:
+          type: string
+          example: Vendor
+          nullable: true
+
+    ContractPartyInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Acme Corp
+        email:
+          type: string
+          format: email
+          example: legal@acme.com
+        role:
+          type: string
+          maxLength: 100
+          example: Vendor
+
+    # ── Contract ─────────────────────────────────────────────────────────────
+
+    ContractStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, EXECUTED, EXPIRED]
+      example: DRAFT
+
+    Contract:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: c1d2e3f4-e5f6-7890-abcd-ef1234567890
+        title:
+          type: string
+          example: Vendor Agreement
+        description:
+          type: string
+          example: Annual vendor agreement with Acme Corp
+          nullable: true
+        startDate:
+          type: string
+          format: date-time
+          example: "2026-01-01T00:00:00.000Z"
+        endDate:
+          type: string
+          format: date-time
+          example: "2026-12-31T00:00:00.000Z"
+        status:
+          $ref: '#/components/schemas/ContractStatus'
+        createdById:
+          type: string
+          format: uuid
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        parties:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractParty'
+        createdBy:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            email:
+              type: string
+
+    # ── Contract Version ─────────────────────────────────────────────────────
+
+    ContractVersionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+          example: 2
+        createdAt:
+          type: string
+          format: date-time
+        changedBy:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            email:
+              type: string
+
+    ContractVersionDetail:
+      allOf:
+        - $ref: '#/components/schemas/ContractVersionSummary'
+        - type: object
+          properties:
+            snapshot:
+              type: object
+              description: Full JSON snapshot of the contract and parties at this version
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                description:
+                  type: string
+                  nullable: true
+                startDate:
+                  type: string
+                  format: date-time
+                endDate:
+                  type: string
+                  format: date-time
+                status:
+                  $ref: '#/components/schemas/ContractStatus'
+                createdById:
+                  type: string
+                  format: uuid
+                parties:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ContractPartyInput'
+                capturedAt:
+                  type: string
+                  format: date-time
+
+    # ── Audit Log ────────────────────────────────────────────────────────────
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum:
+            - CONTRACT_CREATED
+            - CONTRACT_UPDATED
+            - CONTRACT_STATUS_CHANGED
+            - CONTRACT_DELETED
+            - USER_REGISTERED
+            - LOGIN
+            - LOGOUT
+          example: CONTRACT_STATUS_CHANGED
+        entityType:
+          type: string
+          example: contract
+        entityId:
+          type: string
+          format: uuid
+          nullable: true
+        diff:
+          type: object
+          nullable: true
+          description: "Before/after values for update events"
+          example:
+            before:
+              status: DRAFT
+            after:
+              status: ACTIVE
+        ipAddress:
+          type: string
+          nullable: true
+          example: "127.0.0.1"
+        createdAt:
+          type: string
+          format: date-time
+        actor:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            email:
+              type: string
+
+    # ── Request Bodies ────────────────────────────────────────────────────────
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Jane Smith
+        email:
+          type: string
+          format: email
+          example: jane@example.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          description: "Must contain at least one uppercase letter and one number"
+          example: Secret123
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: jane@example.com
+        password:
+          type: string
+          example: Secret123
+
+    CreateContractRequest:
+      type: object
+      required: [title, startDate, endDate, parties]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 300
+          example: Vendor Agreement
+        description:
+          type: string
+          maxLength: 5000
+          example: Annual vendor agreement with Acme Corp
+        startDate:
+          type: string
+          format: date
+          example: "2026-01-01"
+        endDate:
+          type: string
+          format: date
+          example: "2026-12-31"
+          description: Must be after startDate
+        parties:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/ContractPartyInput'
+
+    UpdateContractRequest:
+      type: object
+      description: All fields are optional. Parties array replaces the full list if provided.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 300
+        description:
+          type: string
+          maxLength: 5000
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/ContractStatus'
+          description: "Must be a valid transition from the current status"
+        parties:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/ContractPartyInput'
+          description: Replaces the entire parties list atomically if provided
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Paths
+# ─────────────────────────────────────────────────────────────────────────────
+
+paths:
+
+  # ── Auth ──────────────────────────────────────────────────────────────────
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      description: |
+        Creates a new user account with the `USER` role.
+        Returns an access token in the response body and sets a `refreshToken` HttpOnly cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          headers:
+            Set-Cookie:
+              description: "refreshToken=<token>; HttpOnly; SameSite=Strict; Path=/api/auth"
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      accessToken:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      description: |
+        Validates credentials and returns a new access token + refresh token cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            Set-Cookie:
+              description: "refreshToken=<token>; HttpOnly; SameSite=Strict; Path=/api/auth"
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      accessToken:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Account deactivated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      description: |
+        Issues a new access token using the `refreshToken` HttpOnly cookie.
+        **Rotates** the refresh token — the old one is immediately revoked and a new cookie is set.
+        If a revoked token is reused, all sessions for the user are invalidated.
+      responses:
+        '200':
+          description: Token refreshed successfully
+          headers:
+            Set-Cookie:
+              description: New rotated refreshToken cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Invalid, expired, or missing refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout current session
+      description: Revokes the refresh token and clears the cookie.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    nullable: true
+                    example: null
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ── Contracts ─────────────────────────────────────────────────────────────
+
+  /api/contracts:
+    get:
+      tags: [Contracts]
+      summary: List contracts
+      description: |
+        Returns a paginated list of contracts.
+        - `USER` role: only returns contracts created by the caller
+        - `ADMIN` role: returns all contracts across all users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Case-insensitive search on contract title and party name
+          schema:
+            type: string
+            maxLength: 200
+        - name: status
+          in: query
+          description: "Filter by status. Pass multiple values: ?status=DRAFT&status=ACTIVE"
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ContractStatus'
+          style: form
+          explode: true
+        - name: startDateFrom
+          in: query
+          description: Filter contracts with startDate on or after this date
+          schema:
+            type: string
+            format: date
+        - name: startDateTo
+          in: query
+          description: Filter contracts with startDate on or before this date
+          schema:
+            type: string
+            format: date
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [createdAt, updatedAt]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Paginated contract list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      contracts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Contract'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Contracts]
+      summary: Create a contract
+      description: |
+        Creates a new contract with status `DRAFT` and saves an initial version snapshot (v1).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContractRequest'
+      responses:
+        '201':
+          description: Contract created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      contract:
+                        $ref: '#/components/schemas/Contract'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/contracts/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Contract UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Contracts]
+      summary: Get a contract by ID
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Contract detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      contract:
+                        $ref: '#/components/schemas/Contract'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Contract not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Contracts]
+      summary: Update a contract
+      description: |
+        Updates contract fields. All fields are optional.
+        - If `parties` is provided it **replaces** the full parties list atomically.
+        - Every update creates a new version snapshot.
+        - `status` changes must follow the allowed transition rules.
+
+        **Status transition rules:**
+        | From | Allowed To (User) | Allowed To (Admin) |
+        |---|---|---|
+        | DRAFT | ACTIVE | ACTIVE, EXECUTED, EXPIRED |
+        | ACTIVE | EXECUTED, EXPIRED | EXECUTED, EXPIRED |
+        | EXECUTED | none | none |
+        | EXPIRED | none | none |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContractRequest'
+      responses:
+        '200':
+          description: Contract updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      contract:
+                        $ref: '#/components/schemas/Contract'
+                      previousStatus:
+                        $ref: '#/components/schemas/ContractStatus'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Contract not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid status transition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Contracts]
+      summary: Soft-delete a contract
+      description: |
+        Soft-deletes a contract by setting `deletedAt`. The contract is hidden from all
+        list/detail responses but data is preserved (including audit logs).
+
+        **Deletion rules:**
+        - `USER`: can only delete `DRAFT` contracts
+        - `ADMIN`: can delete `DRAFT` or `ACTIVE` contracts
+        - Neither role can delete `EXECUTED` contracts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Contract soft-deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    nullable: true
+                    example: null
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Contract not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Deletion not permitted for current status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ── Versions ──────────────────────────────────────────────────────────────
+
+  /api/contracts/{id}/versions:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Contract UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Versions]
+      summary: List version history
+      description: Returns all version snapshots for a contract, newest first. The full snapshot JSON is excluded — use the detail endpoint to retrieve it.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Version history list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      versions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ContractVersionSummary'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Contract not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/contracts/{id}/versions/{versionId}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Contract UUID
+        schema:
+          type: string
+          format: uuid
+      - name: versionId
+        in: path
+        required: true
+        description: Version UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Versions]
+      summary: Get a specific version snapshot
+      description: Returns the full JSON snapshot of a contract at a specific version point in time.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Version detail with full snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      version:
+                        $ref: '#/components/schemas/ContractVersionDetail'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Contract or version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ── Audit ─────────────────────────────────────────────────────────────────
+
+  /api/contracts/{id}/audit:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Contract UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Audit]
+      summary: Get contract audit log
+      description: |
+        Returns the paginated activity timeline for a contract.
+        Includes create, update, status change, and delete events.
+        Audit logs are preserved even after a contract is soft-deleted.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Paginated audit log
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      logs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditLog'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Contract not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
