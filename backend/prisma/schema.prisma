@@ -1,0 +1,170 @@
+// Prisma Schema — Contract Management Dashboard
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  EXECUTED
+  EXPIRED
+}
+
+// ─────────────────────────────────────────────
+// User
+// ─────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  refreshTokens     RefreshToken[]
+  contracts         Contract[]
+  contractVersions  ContractVersion[]
+  auditLogs         AuditLog[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// Refresh Token (rotating, hashed)
+// ─────────────────────────────────────────────
+
+model RefreshToken {
+  id               String    @id @default(uuid())
+  // SHA-256 hash of the raw token stored in the cookie
+  token            String    @unique
+  userId           String    @map("user_id")
+  expiresAt        DateTime  @map("expires_at")
+  revokedAt        DateTime? @map("revoked_at")
+  // Links to the next token in the rotation chain (for reuse detection)
+  replacedByToken  String?   @map("replaced_by_token")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────
+// Contract
+// ─────────────────────────────────────────────
+
+model Contract {
+  id          String         @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime       @map("start_date")
+  endDate     DateTime       @map("end_date")
+  status      ContractStatus @default(DRAFT)
+  createdById String         @map("created_by_id")
+  // Soft delete — null means the contract is active
+  deletedAt   DateTime?      @map("deleted_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  createdBy User              @relation(fields: [createdById], references: [id])
+  parties   ContractParty[]
+  versions  ContractVersion[]
+  auditLogs AuditLog[]
+
+  @@index([createdById])
+  @@index([status])
+  @@index([deletedAt])
+  // Composite index for common list query (owner + not deleted)
+  @@index([createdById, deletedAt])
+  @@map("contracts")
+}
+
+// ─────────────────────────────────────────────
+// Contract Party
+// ─────────────────────────────────────────────
+
+model ContractParty {
+  id         String  @id @default(uuid())
+  contractId String  @map("contract_id")
+  name       String
+  email      String?
+  // Free text role label e.g. "Buyer", "Seller", "Witness"
+  role       String?
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId])
+  // Allows searching contracts by party name
+  @@index([name])
+  @@map("contract_parties")
+}
+
+// ─────────────────────────────────────────────
+// Contract Version (snapshot on every update)
+// ─────────────────────────────────────────────
+
+model ContractVersion {
+  id            String   @id @default(uuid())
+  contractId    String   @map("contract_id")
+  versionNumber Int      @map("version_number")
+  // Full JSON snapshot of the contract + parties at this point in time
+  snapshot      Json
+  changedById   String   @map("changed_by_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  contract  Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  changedBy User     @relation(fields: [changedById], references: [id])
+
+  // Each contract has unique, monotonically increasing version numbers
+  @@unique([contractId, versionNumber])
+  @@index([contractId])
+  @@map("contract_versions")
+}
+
+// ─────────────────────────────────────────────
+// Audit Log
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  // Nullable — auth events (LOGIN, LOGOUT) have no contract
+  contractId String?  @map("contract_id")
+  actorId    String   @map("actor_id")
+  // e.g. CONTRACT_CREATED, CONTRACT_UPDATED, CONTRACT_STATUS_CHANGED,
+  //      CONTRACT_DELETED, USER_REGISTERED, LOGIN, LOGOUT
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  // JSON {before: {...}, after: {...}} for update events
+  diff       Json?
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  contract Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  actor    User      @relation(fields: [actorId], references: [id])
+
+  @@index([contractId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

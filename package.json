@@ -1,0 +1,12 @@
+{
+  "name": "contract-management",
+  "private": true,
+  "scripts": {
+    "dev": "docker compose up",
+    "dev:down": "docker compose down",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "lint": "cd backend && npm run lint && cd ../frontend && npm run lint"
+  }
+}
