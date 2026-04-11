@@ -10,7 +10,7 @@ The application is intended to run as a split deployment: a static or serverless
 
 | Surface | Hosting | Notes |
 |--------|---------|--------|
-| **Frontend** | Vercel | https://contract-management-dashboard-nine.vercel.app/. |
+| **Frontend** | https://contract-management-dashboard-nine.vercel.app/. | Vercel Hosting |
 | **Backend API** | https://contract-management-dashboard.onrender.com | REST API; routes are served from this origin. |
 | **Database** | Render (PostgreSQL) | Managed instance; schema managed with Prisma migrations. |
 
