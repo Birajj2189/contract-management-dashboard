@@ -13,4 +13,5 @@ COPY . .
 RUN npx prisma generate
 
 EXPOSE 5000
-CMD ["node", "src/index.js"]
+# Apply migrations then boot (idempotent; safe on every container start)
+CMD ["npm", "run", "start:prod"]
