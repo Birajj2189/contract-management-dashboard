@@ -10,8 +10,8 @@ The application is intended to run as a split deployment: a static or serverless
 
 | Surface | Hosting | Notes |
 |--------|---------|--------|
-| **Frontend** | Vercel | Add your production domain here (for example your project’s `.vercel.app` URL). |
-| **Backend API** | [Render — API base](https://contract-management-dashboard.onrender.com) | REST API; routes are served from this origin. |
+| **Frontend** | Vercel | https://contract-management-dashboard-nine.vercel.app/. |
+| **Backend API** | https://contract-management-dashboard.onrender.com | REST API; routes are served from this origin. |
 | **Database** | Render (PostgreSQL) | Managed instance; schema managed with Prisma migrations. |
 
 Ensure the hosted database has been migrated and (for demo accounts) seeded so login and sample data behave as documented below.
