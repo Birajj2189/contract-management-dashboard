@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { ChevronLeft, FileText as LogoIcon } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, FileText as LogoIcon } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { selectUserRole, selectIsAuthenticated } from '@/store/slices/authSlice'
 import { selectSidebarCollapsed, toggleSidebarCollapsed } from '@/store/slices/uiSlice'
@@ -112,11 +112,14 @@ const Sidebar = ({ mode = 'desktop', onNavigate, onOpenShortcutHelp, className }
             size="icon"
             className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-accent/80"
             onClick={() => dispatch(toggleSidebarCollapsed())}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            <ChevronLeft
-              className={cn('h-4 w-4 transition-transform duration-300 ease-out', collapsed && 'rotate-180')}
-            />
+            {collapsed ? (
+              <PanelLeftOpen className="h-4 w-4" aria-hidden />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" aria-hidden />
+            )}
           </Button>
         )}
       </div>

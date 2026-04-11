@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useNavigate } from 'react-router-dom'
 import FormField from '@/components/forms/FormField'
 import FormSelect from '@/components/forms/FormSelect'
 import { Button } from '@/components/ui/Button'
@@ -10,6 +12,7 @@ import { useFormContext, Controller } from 'react-hook-form'
 import { STATUS_OPTIONS } from '@/utils/statusColors'
 import { cn } from '@/utils/cn'
 import { Plus, Trash2 } from 'lucide-react'
+import { navigateSmartBack } from '@/components/layout/PageBackButton'
 
 const partySchema = z.object({
   name: z.string().trim().min(1, 'Party name is required').max(200),
@@ -95,32 +98,35 @@ const PartiesFields = () => {
     (typeof errors.parties?.root?.message === 'string' && errors.parties.root.message)
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <Label className="text-base">Parties</Label>
-          <p className="text-sm text-muted-foreground">At least one party is required.</p>
+    <div className="rounded-2xl border border-border/80 bg-muted/20 p-5 sm:p-6">
+      <div className="flex flex-col gap-4 border-b border-border/60 pb-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+        <div className="min-w-0 space-y-1">
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">Parties</h3>
+          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
+            Signatories and stakeholders on this agreement. At least one party is required.
+          </p>
         </div>
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           size="sm"
+          className="h-9 shrink-0 self-start shadow-sm sm:mt-0.5"
           disabled={fields.length >= 20}
           onClick={() => append({ ...emptyParty })}
         >
-          <Plus className="mr-1.5 h-4 w-4" />
+          <Plus className="h-4 w-4" />
           Add party
         </Button>
       </div>
-      {partiesError ? <p className="text-xs text-destructive">{partiesError}</p> : null}
-      <div className="space-y-4">
+      {partiesError ? <p className="mt-4 text-sm text-destructive">{partiesError}</p> : null}
+      <div className="mt-5 space-y-4">
         {fields.map((field, index) => (
           <div
             key={field.id}
-            className="relative rounded-lg border border-border bg-muted/30 p-4 pt-3"
+            className="rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:p-5"
           >
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
+            <div className="mb-4 flex items-center justify-between gap-3 border-b border-border/50 pb-3">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Party {index + 1}
               </span>
               {fields.length > 1 && (
@@ -128,7 +134,7 @@ const PartiesFields = () => {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-destructive hover:text-destructive"
+                  className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => remove(index)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -136,25 +142,28 @@ const PartiesFields = () => {
                 </Button>
               )}
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-4">
               <FormField
                 name={`parties.${index}.name`}
                 label="Name"
                 placeholder="Acme Corp"
                 required
-                className="sm:col-span-2"
               />
-              <FormField
-                name={`parties.${index}.email`}
-                label="Email"
-                type="email"
-                placeholder="legal@example.com"
-              />
-              <FormField
-                name={`parties.${index}.role`}
-                label="Role"
-                placeholder="Buyer, Seller…"
-              />
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+                <FormField
+                  name={`parties.${index}.email`}
+                  label="Email"
+                  type="email"
+                  placeholder="legal@example.com"
+                  className="min-w-0"
+                />
+                <FormField
+                  name={`parties.${index}.role`}
+                  label="Role"
+                  placeholder="Buyer, Seller, Witness…"
+                  className="min-w-0"
+                />
+              </div>
             </div>
           </div>
         ))}
@@ -188,10 +197,24 @@ const buildDefaultValues = (fromParent) => {
 }
 
 const ContractForm = ({ defaultValues, onSubmit, isLoading, isEdit = false, isAdmin = false }) => {
+  const navigate = useNavigate()
   const methods = useForm({
     resolver: zodResolver(contractSchema),
     defaultValues: buildDefaultValues(defaultValues),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
   })
+
+  const {
+    formState: { isDirty, isValid },
+    trigger,
+  } = methods
+
+  const submitDisabled = isLoading || !isValid || (isEdit && !isDirty)
+
+  useEffect(() => {
+    if (isEdit) void trigger()
+  }, [isEdit, trigger])
 
   const createStatusOptions = isAdmin
     ? STATUS_OPTIONS
@@ -201,29 +224,52 @@ const ContractForm = ({ defaultValues, onSubmit, isLoading, isEdit = false, isAd
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-5" noValidate>
-        <FormField
-          name="title"
-          label="Contract title"
-          placeholder="Service Agreement 2024"
-          required
-        />
-        <TextareaField
-          name="description"
-          label="Description"
-          placeholder="Brief description of this contract..."
-        />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField name="startDate" label="Start date" type="date" required />
-          <FormField name="endDate" label="End date" type="date" required />
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-8" noValidate>
+        <div className="space-y-5">
+          <FormField
+            name="title"
+            label="Contract title"
+            placeholder="Service Agreement 2024"
+            required
+          />
+          <TextareaField
+            name="description"
+            label="Description"
+            placeholder="Brief description of this contract..."
+            className="[&_textarea]:min-h-[100px]"
+          />
         </div>
+
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-foreground">Contract term</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+            <FormField name="startDate" label="Start date" type="date" required className="min-w-0" />
+            <FormField name="endDate" label="End date" type="date" required className="min-w-0" />
+          </div>
+        </div>
+
         <PartiesFields />
-        <FormSelect name="status" label="Status" options={statusOptions} required />
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={() => history.back()}>
+
+        <div className="max-w-md space-y-2">
+          <FormSelect name="status" label="Status" options={statusOptions} required />
+        </div>
+
+        <div className="flex flex-col-reverse gap-3 border-t border-border/60 pt-6 sm:flex-row sm:justify-end sm:gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto"
+            onClick={() => navigateSmartBack(navigate, '/contracts')}
+          >
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button
+            type="submit"
+            size="lg"
+            disabled={submitDisabled}
+            className="w-full bg-primary font-semibold text-primary-foreground shadow-md hover:bg-primary/90 sm:w-auto sm:min-w-[11.5rem]"
+          >
             {isLoading ? 'Saving...' : isEdit ? 'Update contract' : 'Create contract'}
           </Button>
         </div>

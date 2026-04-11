@@ -44,6 +44,7 @@ const ContractDetailPage = () => {
 
   return (
     <PageWrapper
+      backFallback="/contracts"
       title={contract.title}
       description={`Contract · Created ${formatRelative(contract.createdAt)}`}
       actions={

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { Pencil } from 'lucide-react'
 import PageWrapper from '@/components/layout/PageWrapper'
 import { Button, buttonVariants } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -20,7 +20,6 @@ import toast from 'react-hot-toast'
 
 const UserDetailPage = () => {
   const { userId } = useParams()
-  const navigate = useNavigate()
   const reduceMotion = useReducedMotion()
   const { user: currentUser, isAdmin } = useAuth()
   const { data: user, isLoading, isError, error, refetch } = useUserDetail(userId)
@@ -45,7 +44,7 @@ const UserDetailPage = () => {
 
   if (isLoading) {
     return (
-      <PageWrapper className="mx-auto max-w-3xl" title="User" description="">
+      <PageWrapper backFallback="/users" className="mx-auto max-w-3xl" title="User" description="">
         <div className="space-y-4">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-48 w-full rounded-xl" />
@@ -57,6 +56,7 @@ const UserDetailPage = () => {
   if (isError || !user) {
     return (
       <PageWrapper
+        backFallback="/users"
         className="mx-auto max-w-3xl"
         title="User not found"
         description="This account may have been removed."
@@ -78,19 +78,14 @@ const UserDetailPage = () => {
 
   return (
     <PageWrapper
+      backFallback="/users"
       className="mx-auto max-w-3xl"
       title={user.name}
       description={user.email}
       actions={
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="mr-1.5 h-4 w-4" />
-            Back
-          </Button>
-          <Link to="/users" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
-            All users
-          </Link>
-        </div>
+        <Link to="/users" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
+          All users
+        </Link>
       }
     >
       <motion.div

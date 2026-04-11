@@ -1,6 +1,6 @@
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowLeft, ExternalLink, Pencil } from 'lucide-react'
+import { ExternalLink, Pencil } from 'lucide-react'
 import PageWrapper from '@/components/layout/PageWrapper'
 import { Button, buttonVariants } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
@@ -12,7 +12,6 @@ import { usePartyDetail } from '@/features/parties/hooks/usePartyDetail'
 
 const PartyDetailPage = () => {
   const { partyId } = useParams()
-  const navigate = useNavigate()
   const reduceMotion = useReducedMotion()
   const { party, isLoading, isFetching, isError, isNotFound, refetch } = usePartyDetail(partyId)
 
@@ -24,7 +23,7 @@ const PartyDetailPage = () => {
 
   if (isError) {
     return (
-      <PageWrapper className="mx-auto max-w-7xl" title="Party" description="">
+      <PageWrapper backFallback="/parties" className="mx-auto max-w-7xl" title="Party" description="">
         <div
           className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
           role="alert"
@@ -41,6 +40,7 @@ const PartyDetailPage = () => {
   if (isNotFound) {
     return (
       <PageWrapper
+        backFallback="/parties"
         className="mx-auto max-w-7xl"
         title="Party not found"
         description="This party may have been removed or the link is invalid."
@@ -65,7 +65,7 @@ const PartyDetailPage = () => {
 
   if (showSkeleton) {
     return (
-      <PageWrapper className="mx-auto max-w-7xl" title="Party" description="">
+      <PageWrapper backFallback="/parties" className="mx-auto max-w-7xl" title="Party" description="">
         <div className="space-y-4">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-48 w-full max-w-2xl rounded-xl" />
@@ -76,23 +76,18 @@ const PartyDetailPage = () => {
 
   return (
     <PageWrapper
+      backFallback="/parties"
       className="mx-auto max-w-7xl"
       title={party.name}
       description="Party details and linked contract"
       actions={
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="mr-1.5 h-4 w-4" />
-            Back
-          </Button>
-          <Link
-            to={`/contracts/${party.contractId}/edit`}
-            className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
-          >
-            <Pencil className="mr-1.5 h-4 w-4" />
-            Edit on contract
-          </Link>
-        </div>
+        <Link
+          to={`/contracts/${party.contractId}/edit`}
+          className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
+        >
+          <Pencil className="mr-1.5 h-4 w-4" />
+          Edit on contract
+        </Link>
       }
     >
       <motion.div

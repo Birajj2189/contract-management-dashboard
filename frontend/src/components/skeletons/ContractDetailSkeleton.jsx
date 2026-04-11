@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 
 const ContractDetailSkeleton = () => (
   <PageWrapper
+    backFallback="/contracts"
     title={
       <span className="block">
         <span className="sr-only">Loading contract</span>

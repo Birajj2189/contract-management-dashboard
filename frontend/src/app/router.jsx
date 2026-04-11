@@ -16,6 +16,7 @@ const PartyDetailPage = lazy(() => import('@/features/parties/pages/PartyDetailP
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'))
 const UserDetailPage = lazy(() => import('@/features/users/pages/UserDetailPage'))
 const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'))
+const AccountPage = lazy(() => import('@/features/account/pages/AccountPage'))
 
 const withSuspense = (element) => <Suspense fallback={<RouteFallback />}>{element}</Suspense>
 
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
           {
             path: '/dashboard',
             element: withSuspense(<DashboardPage />),
+          },
+          {
+            path: '/account',
+            element: withSuspense(<AccountPage />),
           },
           {
             path: '/contracts',

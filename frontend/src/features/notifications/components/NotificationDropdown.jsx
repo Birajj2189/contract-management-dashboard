@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import NotificationItem from './NotificationItem'
 import { Bell } from 'lucide-react'
+import AnimatedDropdownSurface from '@/components/motion/AnimatedDropdownSurface'
 
 const NotificationDropdown = ({ children }) => {
   const dispatch = useDispatch()
@@ -25,7 +26,12 @@ const NotificationDropdown = ({ children }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent
+        align="end"
+        sideOffset={8}
+        className="w-80 border bg-popover p-0 text-popover-foreground shadow-lg data-[state=closed]:animate-none data-[state=open]:animate-none"
+      >
+        <AnimatedDropdownSurface>
         <DropdownMenuLabel>
           <div className="flex items-center justify-between">
             <span>Notifications</span>
@@ -73,6 +79,7 @@ const NotificationDropdown = ({ children }) => {
             </div>
           </>
         )}
+        </AnimatedDropdownSurface>
       </DropdownMenuContent>
     </DropdownMenu>
   )

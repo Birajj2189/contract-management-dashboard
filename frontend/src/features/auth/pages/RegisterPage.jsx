@@ -1,31 +1,53 @@
+import { Link } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import RegisterForm from '@/features/auth/components/RegisterForm'
 import { useRegister } from '@/features/auth/hooks/useAuthMutations'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { FileText } from 'lucide-react'
+import AuthLayout from '@/components/layout/AuthLayout'
+import { cn } from '@/utils/cn'
 
 const RegisterPage = () => {
-  const { mutate: register, isPending } = useRegister()
+  const registerMutation = useRegister()
+
+  const serverError =
+    registerMutation.isError && registerMutation.error?.response
+      ? registerMutation.error.response.data?.error?.message ||
+        'We could not create your account. Check your details and try again.'
+      : null
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <FileText className="h-6 w-6" />
-          </div>
-          <h1 className="text-xl font-bold tracking-tight">Contract Management</h1>
+    <AuthLayout>
+      <div
+        className={cn(
+          'rounded-2xl border border-border/60 bg-card/95 p-8 shadow-lg shadow-foreground/5',
+          'backdrop-blur-sm dark:bg-card/90 dark:shadow-black/20',
+          'sm:p-10'
+        )}
+      >
+        <Link
+          to="/login"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Back to sign in
+        </Link>
+
+        <div className="mb-8 space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Create your account
+          </h1>
+          <p className="text-base text-muted-foreground">
+            New here? Set up access to manage contracts with your team.
+          </p>
         </div>
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Create account</CardTitle>
-            <CardDescription>Sign up to start managing contracts</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RegisterForm onSubmit={register} isLoading={isPending} />
-          </CardContent>
-        </Card>
+
+        <RegisterForm
+          onSubmit={(data) => registerMutation.mutate(data)}
+          isLoading={registerMutation.isPending}
+          serverError={serverError}
+          onClearServerError={() => registerMutation.reset()}
+        />
       </div>
-    </div>
+    </AuthLayout>
   )
 }
 

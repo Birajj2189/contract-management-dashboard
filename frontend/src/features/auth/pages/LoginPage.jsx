@@ -1,31 +1,39 @@
 import LoginForm from '@/features/auth/components/LoginForm'
 import { useLogin } from '@/features/auth/hooks/useAuthMutations'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { FileText } from 'lucide-react'
+import AuthLayout from '@/components/layout/AuthLayout'
+import { cn } from '@/utils/cn'
 
 const LoginPage = () => {
-  const { mutate: login, isPending } = useLogin()
+  const loginMutation = useLogin()
+
+  const serverError = loginMutation.isError && loginMutation.error?.response != null
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <FileText className="h-6 w-6" />
-          </div>
-          <h1 className="text-xl font-bold tracking-tight">Contract Management</h1>
+    <AuthLayout>
+      <div
+        className={cn(
+          'rounded-2xl border border-border/60 bg-card/95 p-8 shadow-lg shadow-foreground/5',
+          'backdrop-blur-sm dark:bg-card/90 dark:shadow-black/20',
+          'sm:p-10'
+        )}
+      >
+        <div className="mb-8 space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Welcome back
+          </h1>
+          <p className="text-base text-muted-foreground">
+            Sign in to continue to your workspace and contracts.
+          </p>
         </div>
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Sign in</CardTitle>
-            <CardDescription>Enter your credentials to access the dashboard</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <LoginForm onSubmit={login} isLoading={isPending} />
-          </CardContent>
-        </Card>
+
+        <LoginForm
+          onSubmit={(data) => loginMutation.mutate(data)}
+          isLoading={loginMutation.isPending}
+          serverError={serverError}
+          onClearServerError={() => loginMutation.reset()}
+        />
       </div>
-    </div>
+    </AuthLayout>
   )
 }
 

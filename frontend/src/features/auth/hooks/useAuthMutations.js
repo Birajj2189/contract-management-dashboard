@@ -41,8 +41,10 @@ export const useLogin = () => {
       navigate('/dashboard', { replace: true })
     },
     onError: (err) => {
-      const message = err.response?.data?.message || 'Login failed. Please try again.'
-      toast.error(message)
+      if (!err.response) {
+        toast.error('Unable to reach the server. Check your connection and try again.')
+      }
+      // In-app form shows a generic message for credential failures (no toast — avoids duplicate noise)
     },
   })
 }
@@ -57,8 +59,10 @@ export const useRegister = () => {
       navigate('/login', { replace: true })
     },
     onError: (err) => {
-      const message = err.response?.data?.message || 'Registration failed. Please try again.'
-      toast.error(message)
+      if (!err.response) {
+        toast.error('Unable to reach the server. Check your connection and try again.')
+      }
+      // Signup form shows API or generic message inline
     },
   })
 }

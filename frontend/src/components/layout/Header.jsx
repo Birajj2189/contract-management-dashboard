@@ -1,4 +1,5 @@
 import { useDispatch } from 'react-redux'
+import { Link } from 'react-router-dom'
 import { Menu, Bell, LogOut, User, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import {
@@ -18,6 +19,7 @@ import NotificationDropdown from '@/features/notifications/components/Notificati
 import { Kbd } from '@/components/ui/Kbd'
 import { cn } from '@/utils/cn'
 import { isMacLike } from '@/utils/platform'
+import AnimatedDropdownSurface from '@/components/motion/AnimatedDropdownSurface'
 
 const iconButtonMobile =
   'h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 touch-manipulation lg:h-9 lg:w-9 lg:min-h-0 lg:min-w-0'
@@ -96,7 +98,10 @@ const Header = ({ className }) => {
               type="button"
               variant="ghost"
               size="icon"
-              className={cn(iconButtonMobile, 'relative text-muted-foreground hover:text-foreground')}
+              className={cn(
+                iconButtonMobile,
+                'relative text-muted-foreground transition-transform duration-150 hover:text-foreground active:scale-[0.94]'
+              )}
               aria-label="Notifications"
             >
               <Bell className="h-6 w-6 lg:h-5 lg:w-5" />
@@ -125,26 +130,34 @@ const Header = ({ className }) => {
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">{user?.name}</span>
-                  <span className="text-xs text-muted-foreground">{user?.email}</span>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer" disabled>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer text-destructive focus:text-destructive"
-                onClick={logout}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign out
-              </DropdownMenuItem>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={8}
+              className="w-56 border bg-popover p-0 text-popover-foreground shadow-lg data-[state=closed]:animate-none data-[state=open]:animate-none"
+            >
+              <AnimatedDropdownSurface>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col gap-0.5 px-1 py-0.5">
+                    <span className="font-medium leading-snug">{user?.name}</span>
+                    <span className="text-xs leading-snug text-muted-foreground">{user?.email}</span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/account" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                  onClick={logout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </AnimatedDropdownSurface>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
