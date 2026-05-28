@@ -22,7 +22,7 @@ const app = express();
 // Security & Logging Middleware
 // ─────────────────────────────────────────────────────────────────────────────
 
-app.set('trust proxy', 1); // Required for accurate IP behind Render/Nginx
+app.set('trust proxy', 1); // Required for accurate IP behind AWS App Runner/Nginx
 
 // JSON APIs must not use conditional GET (ETag) — 304 responses have no body, so axios
 // and browsers end up with empty JSON and React Query cache breaks (blank detail pages).

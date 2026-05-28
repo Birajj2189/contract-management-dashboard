@@ -13,8 +13,8 @@ The application is intended to run as a split deployment: a static or serverless
 | Surface | Hosting | Notes |
 |--------|---------|--------|
 | **Frontend** | [contract-management-dashboard-nine.vercel.app](https://contract-management-dashboard-nine.vercel.app) | Vercel |
-| **Backend API** | [contract-management-dashboard.onrender.com](https://contract-management-dashboard.onrender.com) | REST API; routes are served from this origin. |
-| **Database** | Render (PostgreSQL) | Managed instance; schema managed with Prisma migrations. |
+| **Backend API** | AWS App Runner/ECS | REST API; routes are served from this origin. |
+| **Database** | AWS RDS (PostgreSQL) | Managed instance; schema managed with Prisma migrations. |
 
 Ensure the hosted database has been migrated and (for demo accounts) seeded so login and sample data behave as documented below.
 
@@ -108,7 +108,7 @@ If sign-in fails in production, the database may not yet include seeded users; r
 
 ### Database
 
-- **PostgreSQL** (hosted on Render in the reference deployment)
+- **PostgreSQL** (hosted on AWS RDS in the reference deployment)
 - **Relational schema** (users, contracts, parties, version snapshots, refresh tokens, audit logs) with **foreign keys and indexes** rather than embedding sub-documents in a single document store.
 - **Why relational instead of embedding:** contracts share cross-cutting concerns—list filtering by party name and status, reporting aggregates, referential integrity for parties and versions, and append-only audit rows—all map naturally to **normalized tables**, **joins**, and **constraints**. Embedding contract+parties+versions in one document would complicate partial updates, enforce inconsistent invariants, and make indexed search across parties and dates harder at scale. PostgreSQL matches the assignment options and fits OLTP-style workloads for this domain.
 
@@ -142,8 +142,8 @@ The **frontend** and **backend** are separate deployables that communicate over 
 ## Deployment
 
 - **Frontend** — built with Vite and deployed on **Vercel** (or any static host), with environment variables pointing the client at the API base URL.  
-- **Backend** — deployed on **Render** as a Node service; production startup applies **database migrations** before accepting traffic.  
-- **PostgreSQL** — provisioned on **Render**; connection strings and secrets live in **environment-based configuration** only (never committed).  
+- **Backend** — deployed as a Docker container on **AWS**; production startup applies **database migrations** before accepting traffic.  
+- **PostgreSQL** — provisioned on **AWS RDS**; connection strings and secrets live in **environment-based configuration** only (never committed).  
 - **CORS and cookies** — production requires aligned API origins, cookie security flags, and frontend API URL configuration so sessions work across domains.
 
 ---
