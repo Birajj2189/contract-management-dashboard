@@ -10,8 +10,8 @@ on:
       - ".github/workflows/deploy-backend.yml"
 
 env:
-  AWS_REGION: ap-south-1 # Update to your actual region
-  ECR_REPOSITORY: contract_management/backend # Name of your backend ECR repo
+  AWS_REGION: eu-north-1
+  ECR_REPOSITORY: contract-management/backend
   # APP_RUNNER_SERVICE_ARN: arn:aws:apprunner:... # Uncomment if using App Runner
 
 jobs:

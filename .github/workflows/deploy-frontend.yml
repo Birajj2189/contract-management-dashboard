@@ -10,7 +10,7 @@ on:
       - ".github/workflows/deploy-frontend.yml"
 
 env:
-  AWS_REGION: ap-south-1 # Update to your actual region
+  AWS_REGION: eu-north-1
   ECR_REPOSITORY: contract_management/frontend # Name of your frontend ECR repo
   # APP_RUNNER_SERVICE_ARN: arn:aws:apprunner:... # Uncomment if using App Runner
 
