@@ -10,7 +10,7 @@ on:
 
 env:
   AWS_REGION: ap-south-1 # Update to your actual region
-  ECR_REPOSITORY: contract_management/frontend # Name of your backend ECR repo
+  ECR_REPOSITORY: contract_management/backend # Name of your backend ECR repo
   # APP_RUNNER_SERVICE_ARN: arn:aws:apprunner:... # Uncomment if using App Runner
 
 jobs:
