@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - 'backend/**'
-      - '.github/workflows/deploy-backend.yml'
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
 
 env:
-  AWS_REGION: ap-south-1                   # Update to your actual region
-  ECR_REPOSITORY: contracthub-backend      # Name of your backend ECR repo
+  AWS_REGION: ap-south-1 # Update to your actual region
+  ECR_REPOSITORY: contract_management/frontend # Name of your backend ECR repo
   # APP_RUNNER_SERVICE_ARN: arn:aws:apprunner:... # Uncomment if using App Runner
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
           cd backend
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
-          
+
       # Uncomment the step below if you are deploying to AWS App Runner
       # - name: Trigger App Runner Deployment
       #   run: |
