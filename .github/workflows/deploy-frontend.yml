@@ -1,0 +1,50 @@
+name: Deploy Frontend to AWS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+
+env:
+  AWS_REGION: ap-south-1                   # Update to your actual region
+  ECR_REPOSITORY: contracthub-frontend     # Name of your frontend ECR repo
+  # APP_RUNNER_SERVICE_ARN: arn:aws:apprunner:... # Uncomment if using App Runner
+
+jobs:
+  deploy:
+    name: Build and Push Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build a docker container and push it to ECR
+          cd frontend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
+
+      # Uncomment the step below if you are deploying the frontend to AWS App Runner
+      # - name: Trigger App Runner Deployment
+      #   run: |
+      #     aws apprunner start-deployment \
+      #       --service-arn ${{ secrets.APP_RUNNER_FRONTEND_SERVICE_ARN }}
